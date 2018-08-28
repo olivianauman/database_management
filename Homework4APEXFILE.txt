@@ -1,0 +1,66 @@
+SELECT Course_T.CourseID, Course_T.CourseName
+FROM Faculty_T, Course_T, Qualified_T
+WHERE Faculty_T.FacultyName = 'Berndt'
+AND Faculty_T.FacultyID = Qualified_T.FacultyID
+AND Course_T.CourseID = Qualified_T.CourseID;
+
+SELECT Student_T.StudentID, Student_T.StudentName, Section_T.Semester
+FROM Student_T, Section_T, Registration_T
+WHERE Student_T.StudentID = Registration_T.StudentID
+AND Registration_T.SectionNo = '2714'
+AND Section_T.CourseID = 'ISM 4212';
+
+SELECT Faculty_T.FacultyName
+FROM Faculty_T, Qualified_T
+WHERE Qualified_T.CourseID = 'ISM 3113'
+AND Qualified_T.FacultyID = Faculty_T.FacultyID;
+
+SELECT COUNT(Registration_T.StudentID)
+FROM Registration_T, Section_T
+WHERE Section_T.CourseID = 'ISM 3113'
+AND Section_T.Semester = 'I-2008'
+AND Section_T.SectionNo = Registration_T.SectionNo;
+
+SELECT DISTINCT Student_T.StudentID, Student_T.StudentName
+FROM Student_T, Registration_T
+WHERE NOT EXISTS
+(SELECT * FROM Registration_T WHERE Student_T.StudentID = Registration_T.StudentID AND Registration_T.Semester = 'I-2008');
+
+SELECT Order_T.OrderID, Order_T.OrderDate, OrderLine_T.OrderedQuantity, Product_T.ProductID, Product_T.ProductDescription
+FROM Order_T, OrderLine_T, Product_T, Customer_T
+WHERE Customer_T.CustomerID = '4';
+
+WITH MINPRICE AS
+(
+SELECT MIN(ProductStandardPrice) AS PRICE_MIN 
+FROM Product_T 
+)
+SELECT ProductID, ProductStandardPrice - MINPRICE.PRICE_MIN AS DIFFPRICE 
+FROM Product_T, MINPRICE
+
+WITH HEADCNT AS 
+(
+SELECT EmployeeSupervisor, COUNT(EmployeeSupervisor) AS Head_Count 
+FROM EMPLOYEE_T GROUP BY EmployeeSupervisor
+)
+SELECT * FROM HEADCNT WHERE Head_Count > 1;
+
+WITH SALES AS
+(
+SELECT Product_T.PRODUCTID, Product_T.PRODUCTLINEID, Product_T.PRODUCTDESCRIPTION, Product_T.PRODUCTFINISH, Product_T.PRODUCTSTANDARDPRICE, OrderLine_T.ORDERID, OrderLine_T.ORDEREDQUANTITY
+FROM Product_T JOIN OrderLine_T ON Product_T.ProductID = OrderLine_T.ProductID
+), 
+SalesSum AS
+(
+SELECT ProductID, ProductDescription, ProductStandardPrice * OrderedQuantity AS SALES_AMT
+FROM SALES
+)
+SELECT ProductID, ProductDescription, SUM(SALES_AMT) AS Total_Dollar_Sales
+FROM SalesSum
+GROUP BY ProductID, ProductDescription
+ORDER BY SUM(SALES_AMT) DESC;
+
+SELECT Customer_T.CustomerID, Customer_T.CustomerName, COUNT(Order_T.OrderID) AS Total_Orders
+FROM Customer_T LEFT OUTER JOIN Order_T ON Customer_T.CustomerID = Order_T.CustomerID
+GROUP BY Customer_T.CustomerID, Customer_T.CustomerName
+ORDER BY Customer_T.CustomerID ASC;
